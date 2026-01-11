@@ -1,6 +1,6 @@
--- My Frog Pond Auto-Farm v2.1 (January 2026 - Delta Executor)
+-- My Frog Pond Auto-Farm v2.2 (January 2026 - Delta Executor) - AUTO UI!
 -- For YOUR OWN game testing only - DO NOT use in public games!
--- Features: Auto Buy • Auto Sell • Auto Breed • Auto Collect • Speed/Noclip • Nice UI
+-- Features: Auto Buy • Auto Sell • Auto Breed • Auto Collect • Speed/Noclip • Nice UI (AUTO-OPENS!)
 
 if getgenv().FrogPondFarm then return end
 getgenv().FrogPondFarm = true
@@ -11,11 +11,11 @@ local Run = game:GetService("RunService")
 local lp = Players.LocalPlayer
 
 -- ================= CONFIG - YOU MUST UPDATE THESE FROM REMOTE SPY =================
-local REMOTES = RS:WaitForChild("Remotes") -- change if different
+local REMOTES = RS:FindFirstChild("Remotes") -- No WaitForChild to avoid errors if missing
 
-local BUY_REMOTE     = REMOTES:FindFirstChild("PurchaseTadpole") or REMOTES:FindFirstChild("BuyTadpole")
-local SELL_REMOTE    = REMOTES:FindFirstChild("SellFrog")
-local BREED_REMOTE   = REMOTES:FindFirstChild("Breed") or REMOTES:FindFirstChild("BreedFrogs")
+local BUY_REMOTE     = REMOTES and (REMOTES:FindFirstChild("PurchaseTadpole") or REMOTES:FindFirstChild("BuyTadpole"))
+local SELL_REMOTE    = REMOTES and REMOTES:FindFirstChild("SellFrog")
+local BREED_REMOTE   = REMOTES and (REMOTES:FindFirstChild("Breed") or REMOTES:FindFirstChild("BreedFrogs"))
 
 local POND           = workspace:FindFirstChild("Ponds") 
                     and workspace.Ponds:FindFirstChild(lp.Name)
@@ -120,12 +120,18 @@ spawn(function()
     end
 end)
 
--- =================== UI ===================
+-- =================== UI (IMPROVED - Delta Compatible) ===================
 local function createGUI()
+    -- Destroy existing UI first (prevents duplicates)
+    pcall(function()
+        game.CoreGui.FrogFarmUI:Destroy()
+    end)
+    
+    local core = gethui and gethui() or game:GetService("CoreGui") or lp:WaitForChild("PlayerGui")
     local sg = Instance.new("ScreenGui")
     sg.Name = "FrogFarmUI"
-    sg.Parent = game:GetService("CoreGui")
     sg.ResetOnSpawn = false
+    sg.Parent = core  -- Better compatibility!
 
     local f = Instance.new("Frame", sg)
     f.Size = UDim2.new(0, 240, 0, 380)
@@ -138,7 +144,7 @@ local function createGUI()
     local title = Instance.new("TextLabel", f)
     title.Size = UDim2.new(1,0,0,40)
     title.BackgroundColor3 = Color3.fromRGB(0, 140, 0)
-    title.Text = "🐸 My Frog Pond Farm v2.1"
+    title.Text = "🐸 My Frog Pond Farm v2.2"  -- Fixed title!
     title.TextColor3 = Color3.new(1,1,1)
     title.Font = Enum.Font.GothamBold
     title.TextSize = 22
@@ -156,8 +162,11 @@ local function createGUI()
 
         b.MouseButton1Click:Connect(function()
             getgenv().toggles[name] = not getgenv().toggles[name]
-            b.Text = name .. ": " .. (getgenv().toggles[name] and "ON" or "OFF")
+            b.Text = name .. ": " .. (getgenv().toggles[name] and "ON 🟢" or "OFF 🔴")
             b.BackgroundColor3 = getgenv().toggles[name] and Color3.fromRGB(0,180,0) or Color3.fromRGB(35,35,50)
+            
+            -- Instant Noclip update
+            if name == "Noclip" then updateNoclip() end
         end)
 
         y = y + 42
@@ -188,18 +197,25 @@ local function createGUI()
     close.Size = UDim2.new(1,0,0,40)
     close.Position = UDim2.new(0,0,1,-40)
     close.BackgroundColor3 = Color3.fromRGB(180,40,40)
-    close.Text = "Close UI"
+    close.Text = "❌ Close UI"
     close.TextColor3 = Color3.new(1,1,1)
     close.TextSize = 18
     close.MouseButton1Click:Connect(function() sg:Destroy() end)
 
+    print("🐸 UI Auto-Opened! Toggle features & run Remote Spy next.")
     return sg
 end
 
 getgenv().openFrogUI = createGUI
 
+-- 🆕 AUTO-OPEN UI (with 2s delay for safety)
+spawn(function()
+    task.wait(2)
+    createGUI()
+end)
+
 print("=======================================")
-print("🐸 My Frog Pond Auto-Farm v2.1 loaded!")
-print("→ Run:   getgenv().openFrogUI()   to open menu")
-print("→ First: Use Remote Spy to find correct remote names!")
+print("🐸 My Frog Pond Auto-Farm v2.2 LOADED!")
+print("→ UI AUTO-OPENS in 2 seconds! No extra command needed.")
+print("→ First: Use Remote Spy to update CONFIG (remotes/POND).")
 print("=======================================")
